@@ -1,0 +1,22 @@
+# Dataset and Data Directories
+dataset_custom/
+data_with_negatives/
+training_chunks/
+fasta_files/
+cold_data_splits_custom/
+SPOT-RNA-2D/
+
+# Logs and Output Files
+*.txt
+*.out
+*.err
+*.pdf
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Model Checkpoints and Embeddings
+*.pt
+*.pkl
+*.npy
