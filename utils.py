@@ -28,7 +28,7 @@ def create_tagged_docs(mers, name):
 
 def train_doc2vec(mers, name):
     tagged_docs = create_tagged_docs(mers, name)
-    model = Doc2Vec(vector_size=100, min_count=1, epochs=100)
+    model = Doc2Vec(vector_size=100, min_count=1, epochs=100, workers=12)
     model.build_vocab(tagged_docs)
     model.train(tagged_docs, total_examples=model.corpus_count,
                 epochs=model.epochs)

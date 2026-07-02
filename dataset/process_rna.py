@@ -8,8 +8,7 @@ from torch_geometric.data import InMemoryDataset
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
 device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
-
-
+DATASET_DIR = 'custom_dataset'
 def process_rna_file_to_df(input_file_path):    
     with open(input_file_path, 'r') as infile:
         lines = infile.readlines()
@@ -45,15 +44,15 @@ class miRNA_dataset(InMemoryDataset):
         self.is_merged = is_merged
 
         if self.is_merged:
-            self.emb_folder_path = 'dataset/merged_mirna_emb/representations'
-            self.concat_folder_path = 'dataset/merged_mirna_contact'
-            self.df = process_rna_file_to_df('dataset/mirna.fasta')
-            root = 'dataset/merged_mirna' if root is None else root
+            self.emb_folder_path = f'{DATASET_DIR}/merged_mirna_emb/representations'
+            self.concat_folder_path = f'{DATASET_DIR}/merged_mirna_contact'
+            self.df = process_rna_file_to_df(f'{DATASET_DIR}/mirna.fasta')
+            root = f'{DATASET_DIR}/merged_mirna' if root is None else root
         else:
-            self.emb_folder_path = 'dataset/mirna_emb/representations'
-            self.concat_folder_path = 'dataset/mirna_contact'
-            self.df = process_rna_file_to_df('dataset/mirna.fasta')
-            root = 'dataset/mirna' if root is None else root
+            self.emb_folder_path = f'{DATASET_DIR}/mirna_emb/representations'
+            self.concat_folder_path = f'{DATASET_DIR}/mirna_contact'
+            self.df = process_rna_file_to_df(f'{DATASET_DIR}/mirna.fasta')
+            root = f'{DATASET_DIR}/mirna' if root is None else root
 
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])
@@ -98,9 +97,10 @@ class miRNA_dataset(InMemoryDataset):
                 print('bad', emb_file_path)
                 continue
             if len(row['Sequence']) > 640:
+                row['Sequence'] = row['Sequence'][:640]
+                sequence = row['Sequence']
                 print("too long!!")
                 print(rna_emb.size())
-                continue
             data = Data(id=id_value, x=x, edge_index=edge_index, emb=rna_emb, rna_len=rna_len)
 
             if x.size(0) != rna_emb.size(0):

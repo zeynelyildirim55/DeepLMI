@@ -1,22 +1,37 @@
-# Dataset and Data Directories
-dataset_custom/
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Model Weights and Checkpoints
+save/
+save_cold/
+save_embedding/
+*.pth
+*.pt
+
+# Data and Datasets (Too large for GitHub)
+custom_dataset/
 data_with_negatives/
-training_chunks/
+dataset/
 fasta_files/
-cold_data_splits_custom/
+processed_data/
+training_chunks/
+cold_data_splits/
+dataset_in/
+*.jsonl
+*.csv
+*.fasta
+
+# External tools/repos (if they are large or cloned separately)
+RNA-FM/
 SPOT-RNA-2D/
 
-# Logs and Output Files
-*.txt
-*.out
-*.err
-*.pdf
-
-# Python Cache
-__pycache__/
-*.pyc
-
-# Model Checkpoints and Embeddings
-*.pt
-*.pkl
-*.npy
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+*.md.backup
+btag145*.md
+cold_data.py
+DeepLMI_Final_Report.pdf

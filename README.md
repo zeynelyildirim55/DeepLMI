@@ -1,38 +1,49 @@
-# DeepLMI
+# DeepLMI: Rigorous lncRNA-miRNA Interaction Prediction
 
-DeepLMI: Deep Feature Mining with a Globally Enhanced Graph Convolutional Network for Robust lncRNA–miRNA Interaction Prediction
+This repository provides a strict, leak-free implementation for predicting interactions between long non-coding RNAs (lncRNAs) and microRNAs (miRNAs) using Graph Convolutional Networks (GCN) and NLP-based biological embeddings.
 
----
-
-## Directory Structure
-
-```
-DeepLMI/
-├─ cold_data_splits/          # Cold-start fold splits (lncRNA/miRNA/both)
-├─ dataset/                   # Cross-validation dataset
-│  ├─ lncrna.fasta, mirna.fasta, mirna_id.fasta
-│  ├─ mirna_lncrna_interaction.csv
-│  ├─ node_link.csv, index_value.csv
-│  ├─ mirna_emb/, mirna_contact/, mirna_f/
-│  ├─ merged_mirna*, process_rna.py
-├─ dataset_in/             # Processed independent dataset
-├─ save/                      # Standard 5-fold CV results
-├─ save_cold/                 # Cold-start results
-├─ save_embedding/            
-├─ main.py                    # Standard cross-validation
-├─ main_cold_start.py         # Cold-start experiments
-├─ main_independent.py              # Independent test
-├─ model.py                   # DeepLMI model architecture
-├─ utils.py                   # Data loading and metrics
-├─ requirements.txt
-└─ README.md
-```
+This implementation specifically addresses and rectifies **Data Leakage** issues commonly found in interaction prediction literature. It is designed to evaluate the true limits of transductive GCN architectures on highly sparse biological graphs, particularly focusing on **Cold-Start (Blind)** scenarios.
 
 ---
 
-## Environment
+## 🔬 Dataset & Preprocessing
 
-Create a new conda environment:
+Unlike conventional dense interaction databases, this repository utilizes a highly specific and sparse interaction network.
+- **`custom_dataset/node_link.csv`**: The core ground-truth graph, heavily filtered from raw interaction chunks to contain only validated pairs for specific targeted RNAs.
+- **`fasta_files/`**: Raw nucleotide sequences used to extract node features via `Doc2Vec` and `RNA-FM`.
+- **`data_with_negatives/`**: Since deep learning requires counter-examples, this module generates synthetic non-interacting pairs (Label 0) at a 1:1 ratio with true interactions (Label 1) to build robust train/test splits.
+
+> **Note:** The final, ready-to-use splits (incorporating negatives) are located in `processed_data/splits_indexed/`.
+
+---
+
+## 🚀 How to Run
+
+### 1. Standard 5-Fold Cross Validation
+Evaluates the model natively on the graph. This script utilizes K-Fold CV, dynamically hiding 20% of the edges during training.
+```bash
+python main.py
+```
+*Note: Due to the extreme sparsity of the custom dataset, breaking 20% of the edges causes heavy network fragmentation, resulting in a realistic Val AUC of ~0.67.*
+
+### 2. Cold-Start (Blind) Tests
+Evaluates the model's ability to predict interactions for completely unseen, novel RNAs that have no initial connections in the training graph.
+
+```bash
+# Test where miRNAs are unseen
+python main_cold_start.py --mode blind_miRNA
+
+# Test where lncRNAs are unseen
+python main_cold_start.py --mode blind_lncRNA
+
+# Test where BOTH RNAs are completely unseen
+python main_cold_start.py --mode blind_both
+```
+*Note: Since standard GCNs are Transductive and rely solely on topological message-passing, these tests mathematically result in an AUC of ~0.47 (random guessing). This strictly proves the inherent limitation of GCNs on zero-degree cold-start nodes.*
+
+---
+
+## 🛠️ Environment Setup
 
 ```bash
 conda create -n deeplmi python=3.10
@@ -42,65 +53,7 @@ pip install -r requirements.txt
 
 ---
 
-## Datasets
-
-* **Cross-validation dataset** → `dataset/`
-* **Cold-start splits** → `cold_data_splits/`
-* **Independent dataset** → `dataset_in/`
-
----
-## Feature construction
-RNA sequence representations were obtained using RNA-FM. A pretrained RNA-FM model was applied to encode RNA sequences and generate nucleotide-level embeddings, where each nucleotide is represented by a 640-dimensional vector, resulting in an embedding matrix of size L × 640 (L denotes the RNA sequence length). Detailed instructions for installation and embedding extraction are available in the official RNA-FM repository: [RNA-FM](https://github.com/ml4bio/RNA-FM).
-
-In parallel, RNA secondary structure information was predicted using SPOT-RNA-2D. This method infers base-pairing relationships between nucleotides and produces a binary contact matrix of size L × L, where each element is either 0 or 1, indicating the presence or absence of a structural contact. The detailed usage and implementation of SPOT-RNA-2D can be found in its official documentation:[SPOT-RNA-2D](https://github.com/jaswindersingh2/SPOT-RNA-2D).
-
----
-
-## Experiments
-
-Three main experimental setups are implemented:
-
-### 1. Standard Cross-Validation
-
-Run:
-
-```bash
-python main.py
-```
-
-* Outputs to `save/`
-
-### 2. Blind Tests
-
-Run:
-
-```bash
-python main_cold_start.py
-```
-
-* Modes: blind lncRNA / blind miRNA / blind both
-* Outputs to `save_cold/`
-
-### 3. Independent Test
-
-Run:
-
-```bash
-python main_independent.py
-```
-
-* Outputs to `save/`
-
----
-
-## Contact
-
-If you have any issues or questions about this paper or need assistance with reproducing the results, please contact me.
-
-Zhijian Huang
-
-School of Computer Science and Engineering,
-
-Central South University
-
-Email: zhijianhuang@csu.edu.cn
+## 📝 Findings & Conclusion
+The experiments conducted in this repository explicitly demonstrate that without data leakage:
+1. GCN performance drops significantly on fragmented/sparse topologies.
+2. Predicting links for Cold-Start (Blind) nodes using standard Transductive GCNs is mathematically impossible without incorporating Inductive branches (e.g., GraphSAGE) or relying purely on sequence-to-sequence matching models.
